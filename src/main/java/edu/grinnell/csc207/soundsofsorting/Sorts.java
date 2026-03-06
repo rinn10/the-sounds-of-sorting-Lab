@@ -2,6 +2,8 @@ package edu.grinnell.csc207.soundsofsorting;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Arrays;
+import java.util.Random;
 
 import edu.grinnell.csc207.soundsofsorting.events.*;
 
@@ -33,7 +35,26 @@ public class Sorts {
      */
     public static <T extends Comparable<? super T>> List<SortEvent<T>> bubbleSort(T[] arr) {
         List<SortEvent<T>> events = new ArrayList<>();
-        // TODO: fill me in!
+        int length = arr.length;
+        if (length == 0 || length == 1) {
+            return events;
+        }
+        for (int i=length-1; i>=0; i--) {
+            T max = arr[i];
+            int maxIndex = i;
+            for (int j= i-1; j>=0; j--){
+                events.add(new CompareEvent(j, maxIndex));
+                if (arr[j].compareTo(max) > 0){
+                    max = arr[j];
+                    events.add(new CopyEvent(j, max));
+                    maxIndex = j;
+                }
+            }
+            if(i != maxIndex){
+                events.add(new SwapEvent(i, maxIndex));
+                swap(arr, i, maxIndex);
+            }
+        }
         return events;
     }
 
@@ -49,9 +70,28 @@ public class Sorts {
     public static <T extends Comparable<? super T>> List<SortEvent<T>> selectionSort(
             T[] arr) {
         List<SortEvent<T>> events = new ArrayList<>();
-        // TODO: fill me in!
+        int length = arr.length;
+        if (length == 0 || length == 1) {
+           return events;
+        }
+        for (int i = 0; i < length; i++) {
+            T min = arr[i];
+            int minIndex = i;
+            for (int j = i+1; j < length; j++) {
+                events.add(new CompareEvent(j, minIndex));
+                if (arr[j].compareTo(min) < 0) {
+                    min = arr[j];
+                    events.add(new CopyEvent(j, min));
+                    minIndex = j;
+                }
+            }
+            if (i != minIndex) {
+                events.add(new SwapEvent(i, minIndex));
+                swap(arr, i, minIndex);
+            }
+        }
         return events;
-    }
+   }    
 
     /**
      * Sorts the array according to the insertion sort algorithm:
@@ -65,8 +105,84 @@ public class Sorts {
     public static <T extends Comparable<? super T>> List<SortEvent<T>> insertionSort(
             T[] arr) {
         List<SortEvent<T>> events = new ArrayList<>();
-        // TODO: fill me in!
+        int length = arr.length;
+        if (length == 0 || length == 1) {
+            return events;
+        }
+        for (int i = 1; i < length; i++) {
+            int compIndex = i;
+            for (int j = i-1; j >= 0; j--) {
+                events.add(new CompareEvent(compIndex, j));
+                if (arr[compIndex].compareTo(arr[j]) < 0) {
+                    swap(arr, compIndex, j);
+                    events.add(new SwapEvent(compIndex, j));
+                    compIndex--;
+                }    
+            }
+        }
         return events;
+    }
+
+
+    /**
+     * Part of the merge sort algorithm.
+     * Merges two "sub-arrays" together.
+     * @param <T> the carrier type of the array
+     * @param arr 
+     * @param shadow
+     * @param indexA the index to start the left half at
+     * @param indexB 
+     * @param boundB
+     */
+    public static <T extends Comparable<? super T>> void mergeTogether(List<SortEvent<T>> events, T[] arr, T[] shadow, int indexA,
+            int indexB, int boundB) {
+        int boundA = indexB;
+        int indexShadow = indexA;
+        while ((indexA < boundA) && (indexB < boundB)) {
+            events.add(new CompareEvent(indexA, indexB));
+            if (arr[indexA].compareTo(arr[indexB]) <= 0) {
+                shadow[indexShadow] = arr[indexA];
+                indexA++;
+            } else {
+                shadow[indexShadow] = arr[indexB];
+                indexB++;
+            }
+            indexShadow++;
+        }
+        for (; indexA < boundA; indexA++) {
+            shadow[indexShadow] = arr[indexA];
+            indexShadow++;
+        }
+        for (; indexB < boundB; indexB++) {
+            shadow[indexShadow] = arr[indexB];
+            indexShadow++;
+        }
+        for (int i = 0; i < arr.length; i++) {
+            arr[i] = shadow[i];
+            events.add(new CopyEvent(i, shadow[i]));
+        }
+    }
+
+    /**
+     * Part of the merge sort algorithm.
+     * Splits the arrays in two recursively.
+     * @param <T> the carrier type of the array
+     * @param arr the array to sort
+     * @param shadow a shadow array
+     * @param start the array index to start at
+     * @param end the array index to end at
+     */
+    public static <T extends Comparable<? super T>> void mergeSortHelper(List<SortEvent<T>> events, T[] arr, T[] shadow, int start, int end) {
+        int midpoint = start + ((end - start) / 2);
+        if ((end - start) == 1) {
+            shadow[start] = arr[start];
+        } else if ((end - start) == 2) {
+            mergeTogether(events, arr, shadow, start, midpoint, end);
+        } else {
+            mergeSortHelper(events, arr, shadow, start, midpoint);
+            mergeSortHelper(events, arr, shadow, midpoint, end);
+            mergeTogether(events, arr, shadow, start, midpoint, end);
+        }
     }
 
     /**
@@ -78,7 +194,12 @@ public class Sorts {
     public static <T extends Comparable<? super T>> List<SortEvent<T>> mergeSort(
             T[] arr) {
         List<SortEvent<T>> events = new ArrayList<>();
-        // TODO: fill me in!
+        int length = arr.length;
+        if (length == 0 || length == 1) {
+           return events;
+        }
+        T[] shadow = Arrays.copyOf(arr, length);
+        mergeSortHelper(events, arr, shadow, 0, length);
         return events;
     }
 
@@ -90,7 +211,26 @@ public class Sorts {
      */
     public static <T extends Comparable<? super T>> List<SortEvent<T>> quickSort(T[] arr) {
         List<SortEvent<T>> events = new ArrayList<>();
-        // TODO: fill me in!
+        int length = arr.length;
+        if (length == 0 || length == 1) {
+           return events;
+        }
+        Random rand = new Random();
+        int pivotIndex = rand.nextInt(length);
+        T pivotValue = arr[pivotIndex];
+        for (int i=0; i<length; i++) {
+            int rightInsert = pivotIndex+1;
+            int leftInsert = 0;
+            if (arr[i].compareTo(pivotValue) >= 0) {
+                arr[i] = arr[rightInsert];
+                rightInsert++;
+            } else {
+                arr[i] = arr[leftInsert];
+                leftInsert++;
+            }
+        }
+        // Repeat the same procedure until the array is fully sorted.
+        //
         return events;
     }
 
@@ -101,6 +241,10 @@ public class Sorts {
      */
     public static <T extends Comparable<? super T>> void eventSort(
         List<SortEvent<T>> events, T[] arr) {
-        // TODO: implement me!
+        int size = events.size();
+        for (int i = 0; i < size; i++) {
+            SortEvent event = events.get(i);
+            event.apply(arr);
+        }
     }
 }
