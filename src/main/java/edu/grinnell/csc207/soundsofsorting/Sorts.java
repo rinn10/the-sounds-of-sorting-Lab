@@ -134,8 +134,8 @@ public class Sorts {
      * @param indexB 
      * @param boundB
      */
-    public static <T extends Comparable<? super T>> void mergeTogether(List<SortEvent<T>> events, T[] arr, T[] shadow, int indexA,
-            int indexB, int boundB) {
+    public static <T extends Comparable<? super T>> void mergeTogether(List<SortEvent<T>> events, T[] arr, 
+        T[] shadow, int indexA, int indexB, int boundB) {
         int boundA = indexB;
         int indexShadow = indexA;
         while ((indexA < boundA) && (indexB < boundB)) {
@@ -172,7 +172,8 @@ public class Sorts {
      * @param start the array index to start at
      * @param end the array index to end at
      */
-    public static <T extends Comparable<? super T>> void mergeSortHelper(List<SortEvent<T>> events, T[] arr, T[] shadow, int start, int end) {
+    public static <T extends Comparable<? super T>> void mergeSortHelper(List<SortEvent<T>> events, 
+        T[] arr, T[] shadow, int start, int end) {
         int midpoint = start + ((end - start) / 2);
         if ((end - start) == 1) {
             shadow[start] = arr[start];
@@ -204,6 +205,40 @@ public class Sorts {
     }
 
     /**
+     * Part of the quick sort algorithm.
+     * @param <T>
+     * @param arr
+     * @return
+     */
+    public static <T extends Comparable<? super T>> void quickSortHelper(T[] arr, 
+        int startIndex, int endIndex, List<SortEvent<T>> events) {
+        int length = endIndex - startIndex;
+        if (length == 0 || length == 1) {
+           return;
+        }
+        Random rand = new Random();
+        int pivotIndex = rand.nextInt(length);
+        T pivotValue = arr[pivotIndex];
+        for (int i=0; i<length; i++) {
+            int rightInsert = pivotIndex+1;
+            int leftInsert = 0;
+            events.add(new CompareEvent(i, pivotIndex));
+            if (arr[i].compareTo(pivotValue) >= 0) {
+                swap(arr, i, rightInsert);
+                events.add(new SwapEvent(i, rightInsert));
+                rightInsert++;
+            } else {
+                swap(arr, i, leftInsert);
+                events.add(new SwapEvent(i, leftInsert));
+                leftInsert++;
+            }
+        }
+
+        quickSortHelper(arr, startIndex, pivotIndex, events);
+        quickSortHelper(arr, pivotIndex+1, endIndex, events);
+    }
+
+    /**
      * Sorts the array according to the quick sort algorithm.
      * @param <T> the carrier type of the array
      * @param arr the array to sort
@@ -212,25 +247,7 @@ public class Sorts {
     public static <T extends Comparable<? super T>> List<SortEvent<T>> quickSort(T[] arr) {
         List<SortEvent<T>> events = new ArrayList<>();
         int length = arr.length;
-        if (length == 0 || length == 1) {
-           return events;
-        }
-        Random rand = new Random();
-        int pivotIndex = rand.nextInt(length);
-        T pivotValue = arr[pivotIndex];
-        for (int i=0; i<length; i++) {
-            int rightInsert = pivotIndex+1;
-            int leftInsert = 0;
-            if (arr[i].compareTo(pivotValue) >= 0) {
-                arr[i] = arr[rightInsert];
-                rightInsert++;
-            } else {
-                arr[i] = arr[leftInsert];
-                leftInsert++;
-            }
-        }
-        // Repeat the same procedure until the array is fully sorted.
-        //
+        quickSortHelper(arr, 0, length, events);
         return events;
     }
 
