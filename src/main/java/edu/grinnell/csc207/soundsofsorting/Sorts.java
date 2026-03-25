@@ -216,26 +216,23 @@ public class Sorts {
         if (length == 0 || length == 1) {
            return;
         }
-        Random rand = new Random();
-        int pivotIndex = rand.nextInt(length);
+        int pivotIndex = endIndex;
         T pivotValue = arr[pivotIndex];
-        for (int i=0; i<length; i++) {
-            int rightInsert = pivotIndex+1;
-            int leftInsert = 0;
+        int insert = startIndex;
+        for (int j=startIndex; j<endIndex-1; j++) {
             events.add(new CompareEvent(i, pivotIndex));
-            if (arr[i].compareTo(pivotValue) >= 0) {
-                swap(arr, i, rightInsert);
-                events.add(new SwapEvent(i, rightInsert));
-                rightInsert++;
-            } else {
-                swap(arr, i, leftInsert);
-                events.add(new SwapEvent(i, leftInsert));
-                leftInsert++;
+            if (arr[j].compareTo(pivotValue) < 0) {
+                insert++;
+                swap(arr, j, insert);
+                events.add(new SwapEvent(j, insert));
             }
         }
+        insert++;
+        swap(arr, insert, pivotIndex);
+        events.add(new SwapEvent(insert, pivotIndex));
 
-        quickSortHelper(arr, startIndex, pivotIndex, events);
-        quickSortHelper(arr, pivotIndex+1, endIndex, events);
+        quickSortHelper(arr, startIndex, insert-1, events);
+        quickSortHelper(arr, insert+1, endIndex, events);
     }
 
     /**
