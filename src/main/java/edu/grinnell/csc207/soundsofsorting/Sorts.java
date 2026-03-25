@@ -216,23 +216,23 @@ public class Sorts {
         if (length == 0 || length == 1) {
            return;
         }
-        int pivotIndex = endIndex;
+        int pivotIndex = endIndex - 1;
         T pivotValue = arr[pivotIndex];
-        int insert = startIndex;
-        for (int j=startIndex; j<endIndex-1; j++) {
-            events.add(new CompareEvent(i, pivotIndex));
-            if (arr[j].compareTo(pivotValue) < 0) {
-                insert++;
-                swap(arr, j, insert);
-                events.add(new SwapEvent(j, insert));
+        int leftInsert = startIndex;
+        for (int i = startIndex; i < pivotIndex; i++) {
+            events.add(new CompareEvent(i, leftInsert));
+            if (arr[i].compareTo(pivotValue) < 0) {
+                swap(arr, i, leftInsert);
+                events.add(new SwapEvent(i, leftInsert));
+                leftInsert ++;
             }
         }
-        insert++;
-        swap(arr, insert, pivotIndex);
-        events.add(new SwapEvent(insert, pivotIndex));
 
-        quickSortHelper(arr, startIndex, insert-1, events);
-        quickSortHelper(arr, insert+1, endIndex, events);
+        swap(arr, leftInsert, pivotIndex);
+        events.add(new SwapEvent(leftInsert, pivotIndex));
+
+        quickSortHelper(arr, startIndex, leftInsert, events);
+        quickSortHelper(arr, leftInsert+1, endIndex, events);
     }
 
     /**
